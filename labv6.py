@@ -62,7 +62,7 @@ def getmod():
 
     return model
 
-def train(model,totalframes,flength,modelnum):
+def train(model,totalframes,flength,modelnum,number_models,totalf):
     i = 0
     trainedframes = 0
     index = 0 
@@ -114,7 +114,7 @@ def train(model,totalframes,flength,modelnum):
             index = frameindex
 
             if math.isnan(dataset0[index][0]) == False and math.isnan(dataset0[index][1]) == False:
-                print("model: ",str(modelnum)," video: ",vidnum," frame: ",frameindex, "i: ",i)
+                print("model: ",str(modelnum)," / ",str(number_models)," video: ",vidnum," frame: ",frameindex, "i: ",i + 1," / ",totalf)
                 image = cv2.resize(frame, (582,437))
                 cnewframe = image.reshape((763002))
                 frame = cnewframe.astype('float32')
@@ -133,7 +133,7 @@ def train(model,totalframes,flength,modelnum):
         trainedframes = 0
     return model
     
-def getresults(model,num):
+def getresults(model,num,framlen,modelnum):
     cap0 = cv2.VideoCapture("unlabeled/" + str(num) + ".hevc")
 
     ret1, cframe = cap0.read()
@@ -142,7 +142,7 @@ def getresults(model,num):
 
     while index < 1200:
         sframes = 0
-        print("video: ",str(num)," frame: ",index)
+        print("model: ",str(modelnum)," video: ",str(num)," / 9" ," frame: ",index, " / ",framlen)
         image = cv2.resize(cframe, (582,437))
         cnewframe = image.reshape((763002))
         frame = cnewframe.astype('float32')
@@ -196,172 +196,122 @@ ydata = np.cos(zdata) + 0.1 * np.random.randn(100)
 ax.scatter3D(xdata, ydata, zdata, c=zdata, cmap='Greens')
 """
 
-flength = 25
-totalframes = 5000
-number_models = 4
+flength = 5
+totalframes = 5
+number_models = 100
 seed(datetime.now())
 
 start = time.time()
 
-frames = np.empty((flength,763002),dtype=np.float32)
-frame = np.empty((763002),dtype=np.float32)
-labels = np.empty((flength,2),dtype=np.float32)
 
-model1 = getmod()
-model1 = train(model1,totalframes,flength,1)
+labels5 = np.empty((1200,2),dtype=np.float32)
+labels6 = np.empty((1200,2),dtype=np.float32)
+labels7 = np.empty((1200,2),dtype=np.float32)
+labels8 = np.empty((1200,2),dtype=np.float32)
+labels9 = np.empty((1196,2),dtype=np.float32)
 
-del frames
-del frame
-del labels
-gc.collect()
 
-prelabels = np.empty((1200,2),dtype=np.float32)
-testframe = np.empty((1,763002),dtype=np.float32)
+for x in range(number_models):
+    frames = np.empty((flength,763002),dtype=np.float32)
+    frame = np.empty((763002),dtype=np.float32)
+    labels = np.empty((flength,2),dtype=np.float32)
 
-answers51 = getresults(model1,5)
-answers61 = getresults(model1,6)
-answers71 = getresults(model1,7)
-answers81 = getresults(model1,8)
-answers91 = getresults(model1,9)
+    model = getmod()
+    model = train(model,totalframes,flength,x+1,number_models,totalframes)
 
-del prelabels
-#del testframes
-del model1
-gc.collect()
+    del frames
+    del frame
+    del labels
+    gc.collect()
 
-frames = np.empty((flength,763002),dtype=np.float32)
-frame = np.empty((763002),dtype=np.float32)
-labels = np.empty((flength,2),dtype=np.float32)
+    prelabels = np.empty((1200,2),dtype=np.float32)
+    testframe = np.empty((1,763002),dtype=np.float32)
 
-model2 = getmod()
-model2 = train(model2,totalframes,flength,2)
+    answers5 = getresults(model,5,len(labels5),x+1)
+    answers6 = getresults(model,6,len(labels6),x+1)
+    answers7 = getresults(model,7,len(labels7),x+1)
+    answers8 = getresults(model,8,len(labels8),x+1)
+    answers9 = getresults(model,9,len(labels9),x+1)
 
-del frames
-del frame
-del labels
-gc.collect()
+    for i in range(len(labels5)):
+        if x == 0:
+            labels5[i][0] = answers5[x][0]
+            labels5[i][1] = answers5[x][1]
+        else:
+            labels5[i][0] += answers5[x][0]
+            labels5[i][1] += answers5[x][1]
 
-prelabels = np.empty((1200,2),dtype=np.float32)
-#testframes = np.empty((1200,763002),dtype=np.float32)
+    for i in range(len(labels6)):
+        if x == 0:
+            labels6[i][0] = answers6[x][0]
+            labels5[i][1] = answers5[x][1]
+        else:
+            labels6[i][0] += answers6[x][0]
+            labels6[i][1] += answers6[x][1]
 
-answers52 = getresults(model2,5)
-answers62 = getresults(model2,6)
-answers72 = getresults(model2,7)
-answers82 = getresults(model2,8)
-answers92 = getresults(model2,9)
+    for i in range(len(labels7)):
+        if x == 0:
+            labels7[i][0] = answers7[x][0]
+            labels7[i][1] = answers7[x][1]
+        else:
+            labels7[i][0] += answers7[x][0]
+            labels7[i][1] += answers7[x][1]
 
-del prelabels
-#del testframes
-del model2
-gc.collect()
+    for i in range(len(labels8)):
+        if x == 0:
+            labels8[i][0] = answers8[x][0]
+            labels8[i][1] = answers8[x][1]
+        else:
+            labels8[i][0] += answers8[x][0]
+            labels8[i][1] += answers8[x][1]
 
-frames = np.empty((flength,763002),dtype=np.float32)
-frame = np.empty((763002),dtype=np.float32)
-labels = np.empty((flength,2),dtype=np.float32)
+    for i in range(len(labels9)):
+        if x == 0:
+            labels9[i][0] = answers9[x][0]
+            labels9[i][1] = answers9[x][1]
+        else:
+            labels9[i][0] += answers9[x][0]
+            labels9[i][1] += answers9[x][1]
 
-model3 = getmod()
-model3 = train(model3,totalframes,flength,3)
+    del prelabels
+    del testframe
 
-del frames
-del frame
-del labels
-gc.collect()
+    del answers5
+    del answers6
+    del answers7
+    del answers8
+    del answers9
+    gc.collect()
 
-prelabels = np.empty((1200,2),dtype=np.float32)
 
-answers53 = getresults(model3,5)
-answers63 = getresults(model3,6)
-answers73 = getresults(model3,7)
-answers83 = getresults(model3,8)
-answers93 = getresults(model3,9)
+for x in range(len(labels5)):
+    labels5[x][0] = (labels5[x][0] / number_models)
+    labels5[x][1] = (labels5[x][1] / number_models)
 
-del prelabels
-#del testframes
-del model3
-gc.collect()
+for x in range(len(labels6)):
+    labels6[x][0] = (labels6[x][0] / number_models)
+    labels6[x][1] = (labels6[x][1] / number_models)
 
-frames = np.empty((flength,763002),dtype=np.float32)
-frame = np.empty((763002),dtype=np.float32)
-labels = np.empty((flength,2),dtype=np.float32)
+for x in range(len(labels7)):
+    labels7[x][0] = (labels7[x][0] / number_models)
+    labels7[x][1] = (labels7[x][1] / number_models)
 
-model4 = getmod()
-model4 = train(model4,totalframes,flength,4)
+for x in range(len(labels8)):
+    labels8[x][0] = (labels8[x][0] / number_models)
+    labels8[x][1] = (labels8[x][1] / number_models)
 
-del frames
-del frame
-del labels
-gc.collect()
+for x in range(len(labels9)):
+    labels9[x][0] = (labels9[x][0] / number_models)
+    labels9[x][1] = (labels9[x][1] / number_models)
 
-prelabels = np.empty((1200,2),dtype=np.float32)
-testframe = np.empty((1,763002),dtype=np.float32)
 
-answers54 = getresults(model4,5)
-answers64 = getresults(model4,6)
-answers74 = getresults(model4,7)
-answers84 = getresults(model4,8)
-answers94 = getresults(model4,9)
-
-del prelabels
-#del testframes
-del model4
-gc.collect()
-
-prelabels = np.empty((1200,2),dtype=np.float32)
-
-for x in range(1200):
-    prelabels[x][0] = ((answers51[x][0] + answers52[x][0] + answers53[x][0] +  answers54[x][0]) / 4)
-    prelabels[x][1] = ((answers51[x][1] + answers52[x][1] + answers53[x][1] +  answers54[x][1]) / 4)
-
-np.savetxt("unlabeled/5.txt", prelabels)
-
-for x in range(1200):
-    prelabels[x][0] = ((answers61[x][0] + answers62[x][0] + answers63[x][0] + answers64[x][0]) / 4)
-    prelabels[x][1] = ((answers61[x][1] + answers62[x][1] + answers63[x][1] + answers64[x][1]) / 4)
-
-np.savetxt("unlabeled/6.txt", prelabels)
-
-for x in range(1200):
-    prelabels[x][0] = ((answers71[x][0] + answers72[x][0] + answers73[x][0] + answers74[x][0]) / 4)
-    prelabels[x][1] = ((answers71[x][1] + answers72[x][1] + answers73[x][1] + answers74[x][1]) / 4)
-
-np.savetxt("unlabeled/7.txt", prelabels)
-
-for x in range(1200):
-    prelabels[x][0] = ((answers81[x][0] + answers82[x][0] + answers83[x][0] + answers84[x][0]) / 4)
-    prelabels[x][1] = ((answers81[x][1] + answers82[x][1] + answers83[x][1] + answers84[x][1]) / 4)
-
-np.savetxt("unlabeled/8.txt", prelabels)
-
-for x in range(1200):
-    prelabels[x][0] = ((answers91[x][0] + answers92[x][0] + answers93[x][0] + answers94[x][0]) / 4)
-    prelabels[x][1] = ((answers91[x][1] + answers92[x][1] + answers93[x][1] + answers94[x][1]) / 4)
-
-np.savetxt("unlabeled/9.txt", prelabels)
+np.savetxt("unlabeled/5.txt", labels5)
+np.savetxt("unlabeled/6.txt", labels6)
+np.savetxt("unlabeled/7.txt", labels7)
+np.savetxt("unlabeled/8.txt", labels8)
+np.savetxt("unlabeled/9.txt", labels9)
 
 finished = time.time()
-#labeling
-#problem with grading script 4.txt last 4 dont exist
-
-"""
-for x in range(len(dataset0)):
-    if math.isnan(dataset0[index][0]) == False and math.isnan(dataset0[index][1]) == False:
-        totalacc0 += (abs((answer[x][0] - dataset0[x][0]) / dataset0[x][0]))
-        totalacc1 += (abs((answer[x][1] - dataset0[x][1]) / dataset0[x][1]))
-
-        #print("accuracy0: ",100 - ((abs(abs(answer[x][0]) - abs(dataset0[x][0])) / abs(dataset0[x][0])) * 100))
-        #print(answer[x][0]," ",dataset0[x][0])
-        #print("accuracy1: ",100 - ((abs(abs(answer[x][1]) - abs(dataset0[x][1])) / abs(dataset0[x][1])) * 100))
-        #print(answer[x][1]," ",dataset0[x][1])
-        print("index: ",index)
-        print("totals: ",totalacc0, " ",totalacc1)
-
-        index += 1
-
-print("first avg: ",totalacc0)
-print("second avg: ",totalacc1)
-print("first avg: ",totalacc0 / index)
-print("second avg: ",totalacc1 / index)
-"""
 
 print("success!")
-print("time elasped: ",(finished - start)/60, " minutes")
+print("time elasped: ",(finished - start)/60, " minutes or ",(finished - start)/3600," hours")
